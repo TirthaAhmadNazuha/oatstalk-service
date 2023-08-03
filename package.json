@@ -1,0 +1,17 @@
+{
+  "name": "beanstalk-service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/api.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon src/api.js",
+    "start": "node src/api.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "fastify": "^4.21.0"
+  }
+}
