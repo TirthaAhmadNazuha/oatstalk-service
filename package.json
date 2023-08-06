@@ -5,7 +5,7 @@
   "main": "src/api.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon src/api.js",
+    "dev": "nodemon src/dev_test.js",
     "start": "node src/api.js"
   },
   "keywords": [],
