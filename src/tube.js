@@ -53,7 +53,6 @@ const Tube = class {
     }
 
     if (this.putDataStack.length > 0 && !existsSync(this.path)) {
-      console.log(true);
       this.lines.push(JSON.parse(this.putDataStack.shift()));
     }
 
