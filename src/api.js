@@ -29,5 +29,38 @@ app.post('/tubes/:name', (req, res) => {
   res.send(true);
 });
 
+import { createInterface } from 'readline';
 app.listen({ port: 5170, host: 'localhost' })
-  .then((val) => console.log(val));
+  .then(async (val) => {
+    console.log(`Server Running on ${val}`);
+
+    const rl = createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+
+    console.log('For close use `exit` right!.');
+
+    const commandFn = {
+      backup() {
+        let backupTask = [];
+        Object.keys(tubes).forEach(async (key) => {
+          const tube = tubes[key];
+          backupTask.push(tube.backup);
+        });
+        return Promise.all(backupTask);
+      },
+      async exit() {
+        await this.backup();
+        process.exit(1);
+      }
+    };
+    const answerCb = async (answer) => {
+      if (typeof commandFn[answer] == 'function') {
+        await commandFn[answer]();
+      }
+      rl.question('your command: ', answerCb);
+    };
+    rl.question('your command: ', answerCb);
+  });
+

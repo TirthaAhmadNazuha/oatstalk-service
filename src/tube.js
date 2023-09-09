@@ -1,6 +1,5 @@
-import { appendFile, writeFile } from 'fs/promises';
-import TryWarper from './utils/try_warper.js';
-import { ReadStream, createReadStream, existsSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
+import { readFile, writeFile } from 'fs/promises';
+import { appendFileSync, existsSync, unlinkSync, writeFileSync } from 'fs';
 
 const Tube = class {
   constructor(name) {
@@ -21,54 +20,45 @@ const Tube = class {
     if (this.putDataStack.length < this.putDataStackLimit) {
       return;
     }
-    const exists = existsSync(this.path);
-    if (exists) {
-      this.willWriteQueue.push(TryWarper(appendFile, this.path, ';' + this.putDataStack.join(';')));
-      this.putDataStack = [];
-      return;
-    }
-    TryWarper(writeFile, this.path, this.putDataStack.join(';'));
+    if (existsSync(this.path)) {
+      appendFileSync(this.path, ';' + this.putDataStack.join(';'));
+    } else writeFileSync(this.path, this.putDataStack.join(';'));
     this.putDataStack = [];
   }
 
   async consume() {
-    if (this.lines.length <= 1 && existsSync(this.path)) {
-      /** @type {[undefined, ReadStream]} */
-      const [_, readStream] = await Promise.all([this.willWriteQueue.shift(), TryWarper(createReadStream, this.path, { highWaterMaek: 1024 })]);
-      await new Promise((resolve) => {
-        readStream.once('data', (chunk) => {
-          let lines = chunk.toString().split(';', 100);
-          this.usageItemsCount += lines.length;
-          if (this.isLastConsumable) {
-            this.isLastConsumable = false;
-            return null;
-          }
-          if (lines.length === 1) {
-            this.isLastConsumable = true;
-          }
-          this.lines.push(...lines.map((lin) => JSON.parse(lin)));
-          resolve();
-        });
-      });
+    if (this.lines.length < 1) {
+      await this.refileLinesFromFile();
     }
+    return JSON.parse(this.lines.shift() || this.putDataStack.shift() || 'null');
+  }
 
-    if (this.putDataStack.length > 0 && !existsSync(this.path)) {
-      this.lines.push(JSON.parse(this.putDataStack.shift()));
+  async refileLinesFromFile() {
+    if (existsSync(this.path)) {
+      let fromFile = (await readFile(this.path)).toString().split(';');
+      this.lines = fromFile.slice(0, 200);
+      fromFile = fromFile.slice(this.lines.length);
+      const putData = this.putDataStack;
+      this.putDataStack = [];
+      const result = fromFile.concat(putData);
+      if (result.length > 0) {
+        await writeFile(this.path, result.join(';'));
+      } else unlinkSync(this.path);
     }
+  }
 
-    if (this.usageItemsCount >= this.putDataStackLimit) {
-      this.willWriteQueue.push(new Promise((resolve) => {
-        const fileData = readFileSync(this.path).toString().split(';').slice(this.usageItemsCount - 1);
-        this.usageItemsCount = 0;
-        if (fileData.length > 1) {
-          writeFileSync(this.path, fileData.join(';'));
-        } else unlinkSync(this.path);
-        resolve();
-      }));
-      await this.willWriteQueue.shift();
+  async backup() {
+    if (this.putDataStack.length < 1 && this.lines.length < 1) {
+      return;
     }
-
-    return this.lines.shift() || null;
+    if (existsSync(this.path)) {
+      const fromFile = (await readFile(this.path)).toString();
+      await writeFile(this.path, (this.lines.length > 0 ? this.lines.join(';') + ';' : '') + fromFile + (this.putDataStack.length > 0 ? ';' + this.putDataStack.join(';') : ''));
+    } else {
+      await writeFile(this.path, this.putDataStack.concat(this.lines).join(';'));
+    }
+    this.lines = [];
+    this.putDataStack = [];
   }
 };
 
