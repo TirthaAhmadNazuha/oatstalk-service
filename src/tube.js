@@ -13,6 +13,7 @@ const Tube = class {
     this.putDataStack = [];
     this.putDataStackLimit = 50;
     this.isLastConsumable = false;
+    this.ipClients = new Set();
   }
 
   put(...datas) {
@@ -21,8 +22,8 @@ const Tube = class {
       return;
     }
     if (existsSync(this.path)) {
-      appendFileSync(this.path, ';' + this.putDataStack.join(';'));
-    } else writeFileSync(this.path, this.putDataStack.join(';'));
+      appendFileSync(this.path, ';;' + this.putDataStack.join(';;'));
+    } else writeFileSync(this.path, this.putDataStack.join(';;'));
     this.putDataStack = [];
   }
 
@@ -35,14 +36,14 @@ const Tube = class {
 
   async refileLinesFromFile() {
     if (existsSync(this.path)) {
-      let fromFile = (await readFile(this.path)).toString().split(';');
+      let fromFile = (await readFile(this.path)).toString().split(';;');
       this.lines = fromFile.slice(0, 200);
       fromFile = fromFile.slice(this.lines.length);
       const putData = this.putDataStack;
       this.putDataStack = [];
       const result = fromFile.concat(putData);
       if (result.length > 0) {
-        await writeFile(this.path, result.join(';'));
+        await writeFile(this.path, result.join(';;'));
       } else unlinkSync(this.path);
     }
   }
@@ -53,9 +54,9 @@ const Tube = class {
     }
     if (existsSync(this.path)) {
       const fromFile = (await readFile(this.path)).toString();
-      await writeFile(this.path, (this.lines.length > 0 ? this.lines.join(';') + ';' : '') + fromFile + (this.putDataStack.length > 0 ? ';' + this.putDataStack.join(';') : ''));
+      await writeFile(this.path, (this.lines.length > 0 ? this.lines.join(';;') + ';;' : '') + fromFile + (this.putDataStack.length > 0 ? ';;' + this.putDataStack.join(';;') : ''));
     } else {
-      await writeFile(this.path, this.putDataStack.concat(this.lines).join(';'));
+      await writeFile(this.path, this.putDataStack.concat(this.lines).join(';;'));
     }
     this.lines = [];
     this.putDataStack = [];
