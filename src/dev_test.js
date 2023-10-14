@@ -4,24 +4,26 @@ const testTube = new Tube('test');
 
 
 let i = 0;
-while (i++ <= 145) {
+while (i++ <= 10) {
   testTube.put(`data-${i}`);
 }
 
 (async () => {
-  // let isconsume = await testTube.consume();
+  // let isconsume = await testTube.consume(5);
 
   // while (isconsume) {
-  //   isconsume = await testTube.consume();
   //   console.log(isconsume);
+  //   isconsume = await testTube.consume(5);
+  // }
+  // console.log(isconsume);
+
+  console.log('\n--\n');
+  // let i = 6;
+  // while (i-- > 0) {
+  //   console.log(await testTube.consume(3));
   // }
 
-  let i = 100;
-  while (i-- > 0) {
-    console.log(await testTube.consume());
-  }
-
+  await testTube.backup();
   console.log(testTube.putDataStack.length);
   console.log(testTube.lines.length);
-  testTube.backup();
 })();

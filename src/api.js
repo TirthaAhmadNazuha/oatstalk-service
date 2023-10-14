@@ -11,9 +11,18 @@ app.get('/tubes/:name', async (req, res) => {
   const { name } = req.params;
   if (!tubes[name]) {
     tubes[name] = new Tube(name);
-    res.send(null);
+  }
+  if (req.query.size) {
+    let size = 1;
+    try {
+      size = parseInt(req.query.size);
+    } catch (err) {
+      size = 1;
+    }
+    res.send(await tubes[name].consume(size));
     return;
   }
+
   res.send(await tubes[name].consume());
 });
 
@@ -30,7 +39,7 @@ app.post('/tubes/:name', (req, res) => {
 });
 
 import { createInterface } from 'readline';
-app.listen({ port: 5170, host: 'localhost' })
+app.listen({ port: 5170 })
   .then(async (val) => {
     console.log(`Server Running on ${val}`);
 

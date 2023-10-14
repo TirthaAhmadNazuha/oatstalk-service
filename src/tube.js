@@ -27,9 +27,19 @@ const Tube = class {
     this.putDataStack = [];
   }
 
-  async consume() {
+  async consume(length = null) {
     if (this.lines.length < 1) {
       await this.refileLinesFromFile();
+    }
+    if (length > 1) {
+      const result = this.lines.slice(0, length);
+      this.lines = this.lines.slice(length);
+      if (result.length - 1 < length) {
+        const count = length - result.length;
+        result.push(...this.putDataStack.slice(0, count));
+        this.putDataStack = this.putDataStack.slice(count);
+      }
+      return result.length > 0 ? result.map((res) => JSON.parse(res)) : null;
     }
     return JSON.parse(this.lines.shift() || this.putDataStack.shift() || 'null');
   }
