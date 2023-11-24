@@ -41,7 +41,7 @@ app.post('/tubes/:name', (req, res) => {
 import { createInterface } from 'readline';
 app.listen({ port: 5170 })
   .then(async (val) => {
-    console.log(`Server Running on ${val}`);
+    console.log(`Oatstalk Service Running on ${val}`);
 
     const rl = createInterface({
       input: process.stdin,
