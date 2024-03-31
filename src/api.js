@@ -39,7 +39,7 @@ app.post('/tubes/:name', (req, res) => {
 });
 
 import { createInterface } from 'readline';
-app.listen({ port: 5170 })
+app.listen({ host: '0.0.0.0', port: 5170 })
   .then(async (val) => {
     console.log(`Oatstalk Service Running on ${val}`);
 
